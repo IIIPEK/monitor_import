@@ -4,6 +4,7 @@
 
 This project converts a Windchill multi-level BOM CSV export into Monitor ERP import files with `.csv` extension and TAB delimiter.
 The codebase is already split into CLI, service, transform, parsing, and SQL adapter modules to support future migration to a web service.
+The project now also includes a working FastAPI web app with authentication and admin tools.
 
 The current workflow produces:
 
@@ -35,6 +36,17 @@ The current workflow produces:
 - `app/config.py`: SQL Anywhere settings loader
 - `app/conf.py`: optional local fallback settings file for credentials, ignored by git
 - `app/db/sqlany_client.py`: SQL Anywhere client and query-file execution
+- `app/web/main.py`: FastAPI app factory and startup initialization
+- `app/web/routers/pages.py`: web routes (login, profile, admin, conversion)
+- `app/web/auth.py`: password hashing and session auth helpers
+- `app/web/models.py`: SQLAlchemy models (`users`, `conversion_jobs`)
+- `app/web/bootstrap.py`: startup DB migration + bootstrap admin creation
+- `app/web/templates/`: Jinja2 templates (home, login, profile, admin)
+- `app/web/static/`: static assets
+- `app/web/settings.py`: web settings (`DATABASE_URL`, `SESSION_SECRET`, bootstrap admin creds)
+- `run_web.py`: uvicorn entry point
+- `alembic/`: DB migration scripts
+- `alembic.ini`: Alembic configuration
 - `sql/query.sql`: query used to fetch existing material numbers
 - `.env`: local SQL Anywhere credentials and query file path
 
@@ -53,6 +65,28 @@ The current workflow produces:
 - `app/conf.py` is optional and should not be committed; `.gitignore` excludes it
 - If needed, existing material numbers can be loaded from an exported query result file using `--existing-materials-file`
 - For future web-server migration, prefer reusing `app.conversion_service.convert_file()` instead of duplicating CLI logic
+- Web routes use `app.conversion_service.convert_file()` directly for conversion workflow
+- Web DB schema is managed by Alembic; keep model and migration changes in sync
+- On first startup, if no admin exists, bootstrap admin is created from env (defaults: `admin` / `admin`)
+
+## Web Runtime Env
+
+- `DATABASE_URL` (default `sqlite:///./data/web.db`)
+- `SESSION_SECRET` (set in production)
+- `BOOTSTRAP_ADMIN_LOGIN` (default `admin`)
+- `BOOTSTRAP_ADMIN_PASSWORD` (default `admin`)
+
+## Typical Web Run
+
+```bash
+uvicorn run_web:app --reload
+```
+
+## Typical Migration Run
+
+```bash
+alembic upgrade head
+```
 
 ## Typical Run
 

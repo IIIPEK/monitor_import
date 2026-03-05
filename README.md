@@ -6,7 +6,7 @@ The project is now split into small modules so the same conversion flow can be r
 
 - CLI via `convert.py`
 - service code via `app.conversion_service.convert_file()`
-- future web/API endpoints without duplicating conversion logic
+- web app via FastAPI without duplicating conversion logic
 
 ## What It Generates
 
@@ -110,6 +110,51 @@ PartPartNumber;PartDescription;ExtraDescription
 '1003611';'Armatuur ISO 6935-2-10 B500CWR';
 ```
 
+## Web App
+
+Run web server:
+
+```bash
+uvicorn run_web:app --reload
+```
+
+Open:
+
+- `http://127.0.0.1:8000/` (conversion UI)
+- `http://127.0.0.1:8000/healthz` (healthcheck)
+
+Current web features:
+
+- Login/logout with cookie session
+- Profile page for changing own password
+- Admin page for creating users and changing any user password
+- File upload + convert + ZIP download
+- Dedup modes: skip, SQL Anywhere, existing-materials-file
+- Conversion job logging (`conversion_jobs` table)
+
+Bootstrap admin is created automatically on first startup if no admin exists:
+
+- `BOOTSTRAP_ADMIN_LOGIN` (default: `admin`)
+- `BOOTSTRAP_ADMIN_PASSWORD` (default: `admin`)
+
+Database config:
+
+- `DATABASE_URL` (default: `sqlite:///./data/web.db`)
+- `SESSION_SECRET` for session signing
+
+## Migrations (Alembic)
+
+The web schema is versioned with Alembic.
+
+```bash
+alembic upgrade head
+```
+
+Current initial migration creates:
+
+- `users`
+- `conversion_jobs`
+
 ## Output Notes
 
 - Files use `.csv` extension because Monitor import accepts only `.txt` and `.csv`
@@ -132,6 +177,9 @@ PartPartNumber;PartDescription;ExtraDescription
 - `app/config.py`: SQL Anywhere settings loading from env, optional `.env`, and optional local fallback config
 - `app/conf.py`: optional local fallback settings file, ignored by git
 - `app/db/sqlany_client.py`: SQL Anywhere client
+- `app/web/`: FastAPI web app (routers, templates, auth, db, models)
+- `alembic/`: database migrations for web schema
+- `run_web.py`: web app entry point for uvicorn
 - `sql/query.sql`: deduplication query
 - `TSV/`: generated files
 
