@@ -16,6 +16,7 @@ from app.conversion_service import convert_file
 from app.web.auth import (
     SESSION_COOKIE_NAME,
     create_session_token,
+    get_current_user,
     get_optional_current_user,
     hash_password,
     require_admin,
@@ -220,6 +221,73 @@ def logout() -> RedirectResponse:
     response = RedirectResponse(url="/login", status_code=303)
     response.delete_cookie(SESSION_COOKIE_NAME)
     return response
+
+
+@router.get("/profile", response_class=HTMLResponse, tags=["pages"])
+def profile_page(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    return templates.TemplateResponse(
+        request=request,
+        name="profile.html",
+        context={"page_title": "Profile", "current_user": current_user, "error": "", "success": ""},
+    )
+
+
+@router.post("/profile/password", tags=["pages"])
+def update_own_password(
+    request: Request,
+    current_password: str = Form(...),
+    new_password: str = Form(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    if not verify_password(current_password, current_user.password_hash):
+        return templates.TemplateResponse(
+            request=request,
+            name="profile.html",
+            context={
+                "page_title": "Profile",
+                "current_user": current_user,
+                "error": "Current password is incorrect",
+                "success": "",
+            },
+            status_code=400,
+        )
+
+    normalized_password = new_password.strip()
+    if len(normalized_password) < 4:
+        return templates.TemplateResponse(
+            request=request,
+            name="profile.html",
+            context={
+                "page_title": "Profile",
+                "current_user": current_user,
+                "error": "New password must be at least 4 characters",
+                "success": "",
+            },
+            status_code=400,
+        )
+
+    db_user = db.scalar(select(User).where(User.id == current_user.id))
+    if db_user is None:
+        response = RedirectResponse(url="/login", status_code=303)
+        response.delete_cookie(SESSION_COOKIE_NAME)
+        return response
+
+    db_user.password_hash = hash_password(normalized_password)
+    db.commit()
+    return templates.TemplateResponse(
+        request=request,
+        name="profile.html",
+        context={
+            "page_title": "Profile",
+            "current_user": db_user,
+            "error": "",
+            "success": "Password updated",
+        },
+    )
 
 
 @router.get("/admin", response_class=HTMLResponse, tags=["pages"])

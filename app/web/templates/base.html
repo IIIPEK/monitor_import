@@ -14,13 +14,28 @@
     <div class="d-flex align-items-center gap-3">
       <span class="text-secondary small">Web prototype</span>
       {% if current_user %}
-      {% if current_user.is_admin %}
-      <a class="link-secondary small text-decoration-none" href="/admin">Admin</a>
-      {% endif %}
-      <span class="small text-secondary">{{ current_user.username }}</span>
-      <form action="/logout" method="post" class="m-0">
-        <button class="btn btn-outline-secondary btn-sm" type="submit">Logout</button>
-      </form>
+      <div class="dropdown">
+        <button
+          class="btn btn-outline-secondary btn-sm dropdown-toggle"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          {{ current_user.username }}
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="/profile">Profile</a></li>
+          {% if current_user.is_admin %}
+          <li><a class="dropdown-item" href="/admin">Admin</a></li>
+          {% endif %}
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <form action="/logout" method="post" class="m-0">
+              <button class="dropdown-item" type="submit">Logout</button>
+            </form>
+          </li>
+        </ul>
+      </div>
       {% else %}
       <a class="btn btn-outline-secondary btn-sm" href="/login">Login</a>
       {% endif %}
