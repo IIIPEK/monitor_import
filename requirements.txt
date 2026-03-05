@@ -1,2 +1,17 @@
 python-dotenv
 sqlanydb
+
+# Web app
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
+
+# Auth / security
+passlib[bcrypt]
+itsdangerous
+
+# Database and migrations
+sqlalchemy
+alembic
+psycopg[binary]

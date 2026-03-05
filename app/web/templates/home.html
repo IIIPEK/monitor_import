@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12 col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="h4 mb-3">Upload Windchill CSV</h1>
+        <p class="text-secondary mb-4">
+          Upload a Windchill CSV file and download a ZIP archive with 4 converted files.
+        </p>
+
+        <form action="/convert" method="post" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="inputCsv" class="form-label">Source file</label>
+            <input class="form-control" id="inputCsv" name="file" type="file" accept=".csv" required>
+          </div>
+          <div class="mb-3">
+            <label for="baseName" class="form-label">Base output name (optional)</label>
+            <input class="form-control" id="baseName" name="base_name" type="text" placeholder="out">
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Convert and download ZIP</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body p-4">
+        <h2 class="h6 text-uppercase text-secondary mb-3">Status</h2>
+        <ul class="list-unstyled mb-0 small">
+          <li class="mb-2"><strong>Backend:</strong> FastAPI</li>
+          <li class="mb-2"><strong>UI:</strong> Bootstrap 5</li>
+          <li><strong>Health:</strong> <code>/healthz</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
