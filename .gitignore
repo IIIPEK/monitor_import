@@ -12,3 +12,5 @@ dist/
 build/
 *.spec
 app/conf.py
+data/
+alembic/__pycache__/
