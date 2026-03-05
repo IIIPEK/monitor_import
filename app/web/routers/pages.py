@@ -31,7 +31,13 @@ def _cleanup_temp_dir(path: str) -> None:
 
 
 @router.post("/convert", tags=["pages"])
-def convert(request: Request, file: UploadFile = File(...), base_name: str = Form("")) -> FileResponse:
+def convert(
+    request: Request,
+    file: UploadFile = File(...),
+    base_name: str = Form(""),
+    dedup_mode: str = Form("skip"),
+    existing_materials_file: UploadFile | None = File(default=None),
+) -> FileResponse:
     if not file.filename:
         raise HTTPException(status_code=400, detail="Missing file name")
 
@@ -48,18 +54,38 @@ def convert(request: Request, file: UploadFile = File(...), base_name: str = For
         shutil.copyfileobj(file.file, target)
 
     effective_base_name = (base_name or "").strip() or Path(source_name).stem
+    dedup_mode = (dedup_mode or "skip").strip().lower()
+    if dedup_mode not in {"skip", "sql", "existing-file"}:
+        _cleanup_temp_dir(temp_dir)
+        raise HTTPException(status_code=400, detail="Invalid dedup mode")
+
+    existing_file_path: Path | None = None
+    if dedup_mode == "existing-file":
+        if existing_materials_file is None or not existing_materials_file.filename:
+            _cleanup_temp_dir(temp_dir)
+            raise HTTPException(status_code=400, detail="existing_materials_file is required for this mode")
+
+        existing_name = Path(existing_materials_file.filename).name
+        existing_file_path = temp_path / existing_name
+        with existing_file_path.open("wb") as target:
+            shutil.copyfileobj(existing_materials_file.file, target)
+        existing_materials_file.file.close()
+
     try:
         output_files = convert_file(
             input_csv=input_path,
             out_dir=out_dir,
             base_name=effective_base_name,
-            skip_material_dedup_query=True,
+            existing_materials_file=str(existing_file_path) if existing_file_path else None,
+            skip_material_dedup_query=(dedup_mode == "skip"),
         )
     except Exception as exc:
         _cleanup_temp_dir(temp_dir)
         raise HTTPException(status_code=400, detail=f"Conversion failed: {exc}") from exc
     finally:
         file.file.close()
+        if existing_materials_file is not None:
+            existing_materials_file.file.close()
 
     zip_name = f"{effective_base_name}_converted.zip"
     zip_path = temp_path / zip_name

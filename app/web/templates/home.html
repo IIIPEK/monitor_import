@@ -15,10 +15,59 @@
             <label for="inputCsv" class="form-label">Source file</label>
             <input class="form-control" id="inputCsv" name="file" type="file" accept=".csv" required>
           </div>
-          <div class="mb-3">
-            <label for="baseName" class="form-label">Base output name (optional)</label>
-            <input class="form-control" id="baseName" name="base_name" type="text" placeholder="out">
+
+          <p>
+            <a
+              class="btn btn-outline-secondary btn-sm"
+              data-bs-toggle="collapse"
+              href="#advancedOptions"
+              role="button"
+              aria-expanded="false"
+              aria-controls="advancedOptions"
+            >
+              Advanced options
+            </a>
+          </p>
+          <div class="collapse" id="advancedOptions">
+            <div class="border rounded p-3 mb-3 bg-body">
+              <div class="mb-3">
+                <label for="baseName" class="form-label">Base output name (optional)</label>
+                <input class="form-control" id="baseName" name="base_name" type="text" placeholder="out">
+              </div>
+              <fieldset class="mb-3">
+                <legend class="form-label mb-2">Material dedup mode</legend>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="dedup_mode" id="dedupSkip" value="skip" checked>
+                  <label class="form-check-label" for="dedupSkip">
+                    Skip DB dedup
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="dedup_mode" id="dedupSql" value="sql">
+                  <label class="form-check-label" for="dedupSql">
+                    Use SQL Anywhere
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="dedup_mode" id="dedupFile" value="existing-file">
+                  <label class="form-check-label" for="dedupFile">
+                    Use existing materials file
+                  </label>
+                </div>
+              </fieldset>
+              <div class="mb-0">
+                <label for="existingMaterialsFile" class="form-label">Existing materials file (for mode above)</label>
+                <input
+                  class="form-control"
+                  id="existingMaterialsFile"
+                  name="existing_materials_file"
+                  type="file"
+                  accept=".csv,.txt"
+                >
+              </div>
+            </div>
           </div>
+
           <div class="d-flex gap-2">
             <button class="btn btn-primary" type="submit">Convert and download ZIP</button>
           </div>
@@ -34,10 +83,25 @@
         <ul class="list-unstyled mb-0 small">
           <li class="mb-2"><strong>Backend:</strong> FastAPI</li>
           <li class="mb-2"><strong>UI:</strong> Bootstrap 5</li>
+          <li class="mb-2"><strong>Dedup:</strong> skip / SQL / existing-file</li>
           <li><strong>Health:</strong> <code>/healthz</code></li>
         </ul>
       </div>
     </div>
   </div>
 </div>
+<script>
+  (() => {
+    const dedupFile = document.getElementById("dedupFile");
+    const advancedOptions = document.getElementById("advancedOptions");
+    if (!dedupFile || !advancedOptions || !window.bootstrap) return;
+
+    dedupFile.addEventListener("change", () => {
+      if (dedupFile.checked) {
+        const collapse = bootstrap.Collapse.getOrCreateInstance(advancedOptions, { toggle: false });
+        collapse.show();
+      }
+    });
+  })();
+</script>
 {% endblock %}
